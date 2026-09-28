@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Book Care — Love-Care-Support</title>
   <meta name="description" content="Request a verified PSW for in-home care.">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">\n  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\n  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
@@ -13,6 +13,7 @@
   <div class="container nav">
     <a class="brand" href="index.html"><span data-brand>Love-Care-Support</span><span class="dot">.</span></a>
     <nav class="nav-links">
+      <a href="about.html">About</a>
       <a href="join.html">Join as a PSW</a>
     </nav>
   </div>
@@ -20,7 +21,7 @@
 
 <section>
   <div class="container narrow">
-    <div id="formView">
+    <div id="formView" class="form-shell">
       <h2 class="section-title">Request care</h2>
       <p class="section-sub">Tell us what you need. We'll match you with a verified PSW and confirm by phone or email — usually within a few hours.</p>
 
@@ -102,6 +103,27 @@
 
 <footer class="site-footer">
   <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="f-brand"><span data-brand>Love-Care-Support</span><span class="dot">.</span></div>
+        <p class="small">Verified PSWs, on demand — across the Greater Toronto Area.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="about.html">About us</a></li>
+          <li><a href="book.html">Book care</a></li>
+          <li><a href="join.html">Join as a PSW</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:hello@example.com">hello@example.com</a></li>
+          <li><a href="tel:+14165550100">(416) 555-0100</a></li>
+        </ul>
+      </div>
+    </div>
     <p class="fine">© <span data-year>2026</span> <span data-brand>Love-Care-Support</span>. PSWs provide non-medical support services only and work as independent contractors.</p>
   </div>
 </footer>
@@ -109,6 +131,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/motion.js"></script>
 <script>
 (function () {
   // Populate city dropdown
