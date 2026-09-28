@@ -1,6 +1,6 @@
-# CareNest — Uber-style PSW marketplace
+# Love-Care-Support — Uber-style PSW marketplace
 
-> Working brand name — "CareNest" is **not finalized**. It lives in one constant (`BRAND_NAME` in `js/config.js`); change it there and redeploy.
+> Working brand name — "Love-Care-Support" is **not finalized**. It lives in one constant (`BRAND_NAME` in `js/config.js`); change it there and redeploy.
 
 An Uber-like marketplace web app for Ontario home care: families book verified Personal Support Workers for in-home visits; PSWs work as **independent contractors**; the platform takes a ~20% commission per booking and carries blanket liability insurance covering PSWs during booked jobs.
 

@@ -1,5 +1,5 @@
 -- ============================================================================
--- CareNest — Supabase Postgres schema
+-- Love-Care-Support — Supabase Postgres schema
 -- ----------------------------------------------------------------------------
 -- Run this entire file once in the Supabase SQL editor (in order).
 -- It is idempotent where practical (IF NOT EXISTS / DROP POLICY IF EXISTS).

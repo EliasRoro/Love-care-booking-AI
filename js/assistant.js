@@ -7,7 +7,7 @@
    ========================================================================== */
 
 (function () {
-  const BRAND = () => (typeof CONFIG !== "undefined" ? CONFIG.BRAND_NAME : "CareNest");
+  const BRAND = () => (typeof CONFIG !== "undefined" ? CONFIG.BRAND_NAME : "Love-Care-Support");
 
   const FAQS = [
     {

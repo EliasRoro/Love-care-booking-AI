@@ -1,17 +1,17 @@
-# Deploying CareNest — from zero to live
+# Deploying Love-Care-Support — from zero to live
 
 **Time needed:** about 45–60 minutes the first time.
 **Cost:** $0 (all free tiers).
 **You need:** an email address, a web browser, and somewhere to host static files (Netlify, Vercel, or Cloudflare Pages — all free).
 
-> Brand note: "CareNest" is a **working name, not finalized**. To rebrand later, change one constant (`BRAND_NAME` in `js/config.js`) and redeploy. Also update the `<title>` tags if you want to be thorough.
+> Brand note: "Love-Care-Support" is a **working name, not finalized**. To rebrand later, change one constant (`BRAND_NAME` in `js/config.js`) and redeploy. Also update the `<title>` tags if you want to be thorough.
 
 ---
 
 ## Step 1 — Create the Supabase project (free)
 
 1. Go to [supabase.com](https://supabase.com) and sign up (GitHub login is fastest).
-2. **New project** → name it `carenest` (or anything), pick a strong database password and **save it somewhere safe**.
+2. **New project** → name it `love-care-support` (or anything), pick a strong database password and **save it somewhere safe**.
 3. Choose the region closest to you (e.g. Canada / `ca-central-1` if offered, otherwise US East).
 4. Wait ~2 minutes for provisioning.
 
@@ -39,7 +39,7 @@
 
 1. In Supabase: **Authentication** → **Providers** → make sure **Email** is enabled.
 2. **Authentication** → **URL Configuration**:
-   - **Site URL**: for now, leave as-is. After deploying (Step 6), come back and set it to your live URL (e.g. `https://carenest.netlify.app`).
+   - **Site URL**: for now, leave as-is. After deploying (Step 6), come back and set it to your live URL (e.g. `https://love-care-support.netlify.app`).
    - **Redirect URLs**: add your local test URL (`http://localhost:8000`) and later your live URL.
 3. (Optional but recommended) **Authentication** → **Policies**: turn off "Allow new users to sign up" — admins are created by you manually (Step 5), the public never needs Auth accounts in v1.
 
@@ -74,7 +74,7 @@ All three are free and take ~5 minutes. The site is plain HTML/CSS/JS — no bui
 ## Step 7 — Point Supabase Auth at your live URL
 
 Back in Supabase → **Authentication** → **URL Configuration**:
-- Set **Site URL** to your deployed URL (e.g. `https://carenest.netlify.app`).
+- Set **Site URL** to your deployed URL (e.g. `https://love-care-support.netlify.app`).
 - Add it to **Redirect URLs** too.
 
 ## Step 8 — End-to-end test checklist

@@ -1,13 +1,13 @@
 /* ==========================================================================
-   CareNest — central configuration
+   Love-Care-Support — central configuration
    --------------------------------------------------------------------------
-   WORKING BRAND NAME: "CareNest" is a placeholder and NOT finalized.
+   WORKING BRAND NAME: "Love-Care-Support" is a placeholder and NOT finalized.
    Change BRAND_NAME below and the whole site updates.
    ========================================================================== */
 
 const CONFIG = {
   // -- Brand (working name, not finalized) ---------------------------------
-  BRAND_NAME: "CareNest",
+  BRAND_NAME: "Love-Care-Support",
   TAGLINE: "Verified PSWs, on demand.",
 
   // -- Business model -------------------------------------------------------
