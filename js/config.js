@@ -17,7 +17,7 @@ const CONFIG = {
   DEFAULT_HOURLY_RATE: 35,
 
   // -- Supabase backend (FILL THESE IN — see DEPLOY.md) ----------------------
-  SUPABASE_URL: "YOUR_SUPABASE_URL",       // e.g. https://xyzcompany.supabase.co
+  SUPABASE_URL: "https://fwgdelmxjtsozazpjmko.supabase.co",
   SUPABASE_ANON_KEY: "YOUR_SUPABASE_ANON_KEY", // public anon key from Supabase dashboard
 
   // -- Service areas (GTA to start; edit freely) -----------------------------
