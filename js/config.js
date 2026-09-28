@@ -18,10 +18,14 @@ const CONFIG = {
 
   // -- Supabase backend (FILL THESE IN — see DEPLOY.md) ----------------------
   SUPABASE_URL: "https://fwgdelmxjtsozazpjmko.supabase.co",
-  SUPABASE_ANON_KEY: "YOUR_SUPABASE_ANON_KEY", // public anon key from Supabase dashboard
+  SUPABASE_ANON_KEY: "sb_publishable_TUl1O_4ZnxDgbLsrzPuaYg_3SSolocH", // public anon key from Supabase dashboard
 
   // -- Service areas (GTA to start; edit freely) -----------------------------
   SERVICE_AREAS: [
+    "Kitchener",
+    "Waterloo",
+    "Cambridge",
+    "Guelph",
     "Toronto",
     "North York",
     "Scarborough",
@@ -47,8 +51,8 @@ const CONFIG = {
   BOOKING_STATUSES: ["requested", "accepted", "in_progress", "completed", "cancelled"],
 
   // -- Contact (placeholder until business email/phone exist) -----------------
-  CONTACT_EMAIL: "hello@example.com",   // <-- replace with business email
-  CONTACT_PHONE: "(416) 555-0100"        // <-- replace with business phone
+  CONTACT_EMAIL: "eliassaychelem@gmail.com",   // <-- replace with business email
+  CONTACT_PHONE: "(226) 600-6986"        // <-- replace with business phone
 };
 
 // Make brand name available to every page without editing HTML.
