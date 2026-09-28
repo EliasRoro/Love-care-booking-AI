@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Care — CareNest</title>
+  <meta name="description" content="Request a verified PSW for in-home care.">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="index.html"><span data-brand>CareNest</span><span class="dot">.</span></a>
+    <nav class="nav-links">
+      <a href="join.html">Join as a PSW</a>
+    </nav>
+  </div>
+</header>
+
+<section>
+  <div class="container narrow">
+    <div id="formView">
+      <h2 class="section-title">Request care</h2>
+      <p class="section-sub">Tell us what you need. We'll match you with a verified PSW and confirm by phone or email — usually within a few hours.</p>
+
+      <div class="form-error" id="formError" role="alert"></div>
+
+      <form id="bookingForm" novalidate>
+        <div class="field">
+          <label for="clientName">Your full name <span class="req">*</span></label>
+          <input type="text" id="clientName" required autocomplete="name" placeholder="Jane Doe">
+        </div>
+
+        <div class="field">
+          <label for="clientPhone">Phone number <span class="req">*</span></label>
+          <input type="tel" id="clientPhone" required autocomplete="tel" placeholder="(416) 555-0100">
+          <div class="hint">We'll use this to confirm your booking.</div>
+        </div>
+
+        <div class="field">
+          <label for="clientEmail">Email <span class="req">*</span></label>
+          <input type="email" id="clientEmail" required autocomplete="email" placeholder="jane@example.com">
+        </div>
+
+        <div class="field">
+          <label for="address">Care address <span class="req">*</span></label>
+          <input type="text" id="address" required autocomplete="street-address" placeholder="Street address">
+        </div>
+
+        <div class="field">
+          <label for="city">City <span class="req">*</span></label>
+          <select id="city" required></select>
+        </div>
+
+        <div class="field">
+          <label>What kind of help is needed? <span class="req">*</span></label>
+          <div class="checkbox-group" id="serviceTypes">
+            <label class="checkbox-item"><input type="checkbox" value="personal_care"><span><span class="label-text">Personal care</span><br><span class="sub">Bathing, dressing, grooming</span></span></label>
+            <label class="checkbox-item"><input type="checkbox" value="mobility"><span><span class="label-text">Mobility support</span><br><span class="sub">Transfers, walking assistance</span></span></label>
+            <label class="checkbox-item"><input type="checkbox" value="meal_prep"><span><span class="label-text">Meal preparation</span><br><span class="sub">Cooking and feeding assistance</span></span></label>
+            <label class="checkbox-item"><input type="checkbox" value="companionship"><span><span class="label-text">Companionship</span><br><span class="sub">Conversation, supervision, outings</span></span></label>
+            <label class="checkbox-item"><input type="checkbox" value="dementia"><span><span class="label-text">Dementia / Alzheimer's experience needed</span><br><span class="sub">Matched with experienced PSWs</span></span></label>
+            <label class="checkbox-item"><input type="checkbox" value="light_housekeeping"><span><span class="label-text">Light housekeeping</span><br><span class="sub">Care-related tidying and laundry</span></span></label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="languages">Preferred language(s)</label>
+          <input type="text" id="languages" placeholder="e.g. English, Tagalog">
+          <div class="hint">Separate multiple languages with commas.</div>
+        </div>
+
+        <div class="field">
+          <label for="preferredTimes">Preferred days &amp; times <span class="req">*</span></label>
+          <textarea id="preferredTimes" required placeholder="e.g. Weekdays 9am–1pm, starting next Monday. About 4 hours per visit."></textarea>
+        </div>
+
+        <div class="field">
+          <label for="notes">Anything else we should know?</label>
+          <textarea id="notes" placeholder="Health considerations, pets in the home, parking, access instructions…"></textarea>
+          <div class="hint">Please don't include highly sensitive medical details here — we'll discuss those privately when confirming.</div>
+        </div>
+
+        <button type="submit" class="btn block" id="submitBtn">Request care</button>
+        <p class="small muted center mt">No payment today. We confirm every request personally before anything is scheduled.</p>
+      </form>
+    </div>
+
+    <div id="successView" class="hidden">
+      <div class="form-success">
+        <div class="big-check">✓</div>
+        <h2 class="section-title">Request received</h2>
+        <p class="muted">Your reference number — keep it handy:</p>
+        <div class="ref-code" id="refCode"></div>
+        <p class="muted">We'll call or email you shortly to confirm details and match your PSW. If you need to reach us first: <a href="mailto:hello@example.com">hello@example.com</a></p>
+        <a class="btn secondary mt" href="index.html">Back to home</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <p class="fine">© <span data-year>2026</span> <span data-brand>CareNest</span>. PSWs provide non-medical support services only and work as independent contractors.</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script>
+(function () {
+  // Populate city dropdown
+  const citySel = document.getElementById("city");
+  CONFIG.SERVICE_AREAS.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c; opt.textContent = c;
+    citySel.appendChild(opt);
+  });
+
+  const form = document.getElementById("bookingForm");
+  const errBox = document.getElementById("formError");
+
+  function showError(msg) {
+    errBox.textContent = msg;
+    errBox.classList.add("show");
+    errBox.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errBox.classList.remove("show");
+
+    const name = document.getElementById("clientName").value.trim();
+    const phone = document.getElementById("clientPhone").value.trim();
+    const email = document.getElementById("clientEmail").value.trim();
+    const address = document.getElementById("address").value.trim();
+    const city = citySel.value;
+    const preferredTimes = document.getElementById("preferredTimes").value.trim();
+    const notes = document.getElementById("notes").value.trim();
+    const languages = document.getElementById("languages").value.split(",").map(s => s.trim()).filter(Boolean);
+    const serviceTypes = [...document.querySelectorAll("#serviceTypes input:checked")].map(c => c.value);
+
+    if (!name || !phone || !email || !address || !preferredTimes) {
+      showError("Please fill in all required fields.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showError("Please enter a valid email address.");
+      return;
+    }
+    if (serviceTypes.length === 0) {
+      showError("Please select at least one type of care needed.");
+      return;
+    }
+
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.textContent = "Sending…";
+
+    try {
+      const db = getSupabase();
+
+      // 1. Save the client (contact record)
+      const { data: client, error: clientErr } = await db
+        .from("clients")
+        .insert({ full_name: name, phone, email, address, city })
+        .select("id")
+        .single();
+      if (clientErr) throw clientErr;
+
+      // 2. Save the booking request
+      const referenceCode = makeReferenceCode();
+      const { error: bookingErr } = await db.from("bookings").insert({
+        reference_code: referenceCode,
+        client_id: client.id,
+        client_name: name,
+        client_phone: phone,
+        client_email: email,
+        address,
+        city,
+        service_types: serviceTypes,
+        needed_languages: languages,
+        preferred_times: preferredTimes,
+        notes: notes || null,
+        status: "requested",
+        hourly_rate: CONFIG.DEFAULT_HOURLY_RATE,
+        commission_rate: CONFIG.COMMISSION_RATE
+      });
+      if (bookingErr) throw bookingErr;
+
+      document.getElementById("refCode").textContent = referenceCode;
+      document.getElementById("formView").classList.add("hidden");
+      document.getElementById("successView").classList.remove("hidden");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      console.error(err);
+      showError("Something went wrong sending your request. Please try again, or email us at hello@example.com. (" + err.message + ")");
+      btn.disabled = false;
+      btn.textContent = "Request care";
+    }
+  });
+})();
+</script>
+</body>
+</html>

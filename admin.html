@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — CareNest</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="index.html"><span data-brand>CareNest</span><span class="dot">.</span></a>
+    <nav class="nav-links">
+      <span class="small muted">Admin console</span>
+      <button class="btn small ghost hidden" id="logoutBtn">Log out</button>
+    </nav>
+  </div>
+</header>
+
+<section>
+  <div class="container">
+
+    <!-- LOGIN VIEW -->
+    <div id="loginView" class="container narrow">
+      <h2 class="section-title">Admin sign in</h2>
+      <p class="section-sub">Restricted area. Sign in with your administrator account.</p>
+      <div class="form-error" id="loginError" role="alert"></div>
+      <form id="loginForm">
+        <div class="field">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" required autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn block" id="loginBtn">Sign in</button>
+      </form>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="dashView" class="hidden">
+      <h2 class="section-title">Dashboard</h2>
+      <p class="section-sub">Signed in as <strong id="adminEmail"></strong></p>
+
+      <div class="admin-tabs" id="adminTabs">
+        <button data-tab="overview" class="active">Overview</button>
+        <button data-tab="verify">Verification queue <span id="verifyCount"></span></button>
+        <button data-tab="bookings">Bookings</button>
+        <button data-tab="psws">PSW roster</button>
+        <button data-tab="payouts">Payouts</button>
+        <button data-tab="reviews">Reviews</button>
+      </div>
+
+      <div class="admin-panel active" id="panel-overview">
+        <div class="stat-grid">
+          <div class="stat"><div class="num" id="statPending">–</div><div class="lbl">PSWs awaiting verification</div></div>
+          <div class="stat"><div class="num" id="statToday">–</div><div class="lbl">Bookings requested (unassigned)</div></div>
+          <div class="stat"><div class="num" id="statActive">–</div><div class="lbl">Active PSWs</div></div>
+          <div class="stat"><div class="num" id="statRevenue">–</div><div class="lbl">Platform revenue this month</div></div>
+        </div>
+        <div class="card">
+          <h3>Certifications expiring soon</h3>
+          <div id="expiringDocs"><p class="muted">Loading…</p></div>
+        </div>
+      </div>
+
+      <div class="admin-panel" id="panel-verify">
+        <div id="verifyList"><p class="muted">Loading…</p></div>
+      </div>
+
+      <div class="admin-panel" id="panel-bookings">
+        <div id="bookingList"><p class="muted">Loading…</p></div>
+      </div>
+
+      <div class="admin-panel" id="panel-psws">
+        <div id="pswList"><p class="muted">Loading…</p></div>
+      </div>
+
+      <div class="admin-panel" id="panel-payouts">
+        <div id="payoutList"><p class="muted">Loading…</p></div>
+      </div>
+
+      <div class="admin-panel" id="panel-reviews">
+        <div id="reviewList"><p class="muted">Loading…</p></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Assign-PSW modal -->
+<div id="assignModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;">
+  <div class="card" style="max-width:560px;width:100%;max-height:85vh;overflow-y:auto;">
+    <h3>Suggested matches <span class="badge in_progress">smart matching v1</span></h3>
+    <p class="small muted">Ranked by specialization, language, availability, rating, and experience. Scores are explainable — expand a PSW to see why.</p>
+    <div id="matchList"></div>
+    <button class="btn ghost block mt" id="assignClose">Close</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/matching.js"></script>
+<script>
+(function () {
+  let db = null;
+  let activePSWs = [];
+  let currentBooking = null;
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const money = (n) => "$" + Number(n || 0).toFixed(2);
+  const badge = (s) => `<span class="badge ${esc(s)}">${esc(s.replace(/_/g, " "))}</span>`;
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-CA") : "—";
+
+  /* ---------- Tabs ---------- */
+  document.querySelectorAll("#adminTabs button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#adminTabs button").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".admin-panel").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      $("panel-" + btn.dataset.tab).classList.add("active");
+    });
+  });
+
+  /* ---------- Auth ---------- */
+  $("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errBox = $("loginError");
+    errBox.classList.remove("show");
+    const btn = $("loginBtn");
+    btn.disabled = true; btn.textContent = "Signing in…";
+    try {
+      db = getSupabase();
+      const { data, error } = await db.auth.signInWithPassword({
+        email: $("loginEmail").value.trim(),
+        password: $("loginPassword").value
+      });
+      if (error) throw error;
+
+      // Must be in admin_users
+      const { data: admin, error: adminErr } = await db
+        .from("admin_users").select("role").eq("user_id", data.user.id).single();
+      if (adminErr || !admin) {
+        await db.auth.signOut();
+        throw new Error("This account is not an administrator.");
+      }
+
+      $("adminEmail").textContent = data.user.email;
+      $("loginView").classList.add("hidden");
+      $("dashView").classList.remove("hidden");
+      $("logoutBtn").classList.remove("hidden");
+      loadAll();
+    } catch (err) {
+      console.error(err);
+      errBox.textContent = err.message;
+      errBox.classList.add("show");
+      btn.disabled = false; btn.textContent = "Sign in";
+    }
+  });
+
+  $("logoutBtn").addEventListener("click", async () => {
+    if (db) await db.auth.signOut();
+    location.reload();
+  });
+
+  // Restore session on reload
+  (async function restore() {
+    try {
+      db = getSupabase();
+      const { data } = await db.auth.getSession();
+      if (data.session) {
+        const { data: admin } = await db.from("admin_users")
+          .select("role").eq("user_id", data.session.user.id).single();
+        if (admin) {
+          $("adminEmail").textContent = data.session.user.email;
+          $("loginView").classList.add("hidden");
+          $("dashView").classList.remove("hidden");
+          $("logoutBtn").classList.remove("hidden");
+          loadAll();
+        } else {
+          await db.auth.signOut();
+        }
+      }
+    } catch (e) { /* stay on login */ }
+  })();
+
+  /* ---------- Data loading ---------- */
+  async function loadAll() {
+    await Promise.all([
+      loadOverview(), loadVerifyQueue(), loadBookings(),
+      loadPSWs(), loadPayouts(), loadReviews()
+    ]);
+  }
+
+  async function loadOverview() {
+    const [pending, unassigned, active, revenue] = await Promise.all([
+      db.from("psws").select("id", { count: "exact", head: true }).eq("status", "applied"),
+      db.from("bookings").select("id", { count: "exact", head: true }).eq("status", "requested").is("psw_id", null),
+      db.from("psws").select("id", { count: "exact", head: true }).eq("status", "active"),
+      db.from("payments").select("platform_fee").gte("created_at", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString())
+    ]);
+    $("statPending").textContent = pending.count ?? 0;
+    $("statToday").textContent = unassigned.count ?? 0;
+    $("statActive").textContent = active.count ?? 0;
+    const total = (revenue.data || []).reduce((s, r) => s + Number(r.platform_fee), 0);
+    $("statRevenue").textContent = money(total);
+    $("verifyCount").textContent = pending.count ? `(${pending.count})` : "";
+
+    // Expiring certifications (next 30 days) / expired
+    const { data: docs } = await db.from("documents")
+      .select("id, doc_type, expiry_date, psw_id, psws(full_name)")
+      .eq("verification_status", "verified")
+      .not("expiry_date", "is", null)
+      .order("expiry_date", { ascending: true })
+      .limit(50);
+    const now = new Date(); now.setHours(0,0,0,0);
+    const soon = new Date(now); soon.setDate(soon.getDate() + 30);
+    const flagged = (docs || []).filter(d => new Date(d.expiry_date) <= soon);
+    $("expiringDocs").innerHTML = flagged.length
+      ? `<div class="table-wrap"><table><tr><th>PSW</th><th>Document</th><th>Expiry</th><th>Status</th></tr>` +
+        flagged.map(d => {
+          const expired = new Date(d.expiry_date) < now;
+          return `<tr><td>${esc(d.psws?.full_name)}</td><td>${esc(d.doc_type)}</td><td>${fmtDate(d.expiry_date)}</td>
+            <td><span class="badge ${expired ? "expired" : "expiring"}">${expired ? "EXPIRED" : "expiring soon"}</span></td></tr>`;
+        }).join("") + `</table></div>`
+      : `<p class="muted">Nothing expiring in the next 30 days. 🎉</p>`;
+  }
+
+  /* ---------- Verification queue ---------- */
+  async function loadVerifyQueue() {
+    const { data: psws } = await db.from("psws")
+      .select("*").in("status", ["applied", "verifying"]).order("created_at", { ascending: true });
+    const box = $("verifyList");
+    if (!psws || !psws.length) { box.innerHTML = `<p class="muted">Queue is clear. 🎉</p>`; return; }
+
+    box.innerHTML = "";
+    for (const p of psws) {
+      const { data: docs } = await db.from("documents").select("*").eq("psw_id", p.id);
+      const card = document.createElement("div");
+      card.className = "card mb";
+      const docRows = (docs || []).map(d =>
+        `<div><a href="#" class="doc-link" data-path="${esc(d.file_path)}" data-docid="${d.id}">📄 ${esc(d.doc_type)}${d.expiry_date ? " (exp " + fmtDate(d.expiry_date) + ")" : ""}</a> ${badge(d.verification_status)}</div>`
+      ).join("");
+      card.innerHTML = `
+        <h3>${esc(p.full_name)} ${badge(p.status)}</h3>
+        <p class="small muted">${esc(p.email)} · ${esc(p.phone)} · ${esc(p.city)} · ${p.experience_years} yrs exp · ${esc((p.languages || []).join(", "))}</p>
+        <p class="small">Specializations: ${esc((p.specializations || []).join(", ") || "—")}</p>
+        <p class="small">Availability: ${esc(p.availability?.text || "—")}</p>
+        <p class="small">Contractor confirmed: <strong>${p.contractor_confirmed ? "Yes ✓" : "NO — do not approve"}</strong></p>
+        <div class="mb">${docRows || '<p class="muted">No documents uploaded.</p>'}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn small" data-act="approve" data-id="${p.id}">Approve → active</button>
+          <button class="btn small ghost" data-act="verifying" data-id="${p.id}">Mark verifying</button>
+          <button class="btn small danger" data-act="reject" data-id="${p.id}">Reject</button>
+        </div>`;
+      box.appendChild(card);
+    }
+
+    box.querySelectorAll(".doc-link").forEach(a => {
+      a.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const { data, error } = await db.storage.from("psw-documents").createSignedUrl(a.dataset.path, 300);
+        if (error) { alert("Could not open document: " + error.message); return; }
+        window.open(data.signedUrl, "_blank");
+      });
+    });
+
+    box.querySelectorAll("button[data-act]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id, act = btn.dataset.act;
+        let reason = null;
+        if (act === "reject") {
+          reason = prompt("Rejection reason (the PSW will not see this unless you tell them):");
+          if (reason === null) return;
+        }
+        if (act === "approve") {
+          // Safety: don't approve without contractor confirmation
+          const { data: p } = await db.from("psws").select("contractor_confirmed").eq("id", id).single();
+          if (!p?.contractor_confirmed && !confirm("Contractor confirmation is NOT checked. Approve anyway?")) return;
+        }
+        const status = act === "approve" ? "active" : act === "reject" ? "rejected" : "verifying";
+        const { error } = await db.from("psws").update({
+          status, rejection_reason: reason
+        }).eq("id", id);
+        if (error) alert("Update failed: " + error.message);
+        else loadAll();
+      });
+    });
+  }
+
+  /* ---------- Bookings ---------- */
+  async function loadBookings() {
+    const { data } = await db.from("bookings")
+      .select("*, psws(full_name)").order("created_at", { ascending: false }).limit(100);
+    const box = $("bookingList");
+    if (!data || !data.length) { box.innerHTML = `<p class="muted">No bookings yet.</p>`; return; }
+
+    const { data: pswRows } = await db.from("psws").select("*").eq("status", "active");
+    activePSWs = pswRows || [];
+
+    box.innerHTML = `<div class="table-wrap"><table>
+      <tr><th>Ref</th><th>Client</th><th>Needs</th><th>PSW</th><th>Status</th><th>Actions</th></tr>
+      ${data.map(b => `
+        <tr>
+          <td><strong>${esc(b.reference_code)}</strong><br><span class="small muted">${fmtDate(b.created_at)}</span></td>
+          <td>${esc(b.client_name)}<br><span class="small muted">${esc(b.client_phone)}<br>${esc(b.city)}</span></td>
+          <td class="small">${esc((b.service_types || []).join(", "))}<br><span class="muted">${esc(b.preferred_times || "").slice(0, 80)}</span></td>
+          <td>${b.psws ? esc(b.psws.full_name) : '<span class="muted">unassigned</span>'}</td>
+          <td>${badge(b.status)}</td>
+          <td style="white-space:nowrap;">
+            <button class="btn small ghost" data-bact="assign" data-bid="${b.id}">Assign</button>
+            <button class="btn small ghost" data-bact="details" data-bid="${b.id}">Details</button>
+            <button class="btn small ghost" data-bact="status" data-bid="${b.id}">Status</button>
+          </td>
+        </tr>`).join("")}
+    </table></div>`;
+
+    box.querySelectorAll("button[data-bact]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const bid = btn.dataset.bid;
+        const { data: booking } = await db.from("bookings").select("*").eq("id", bid).single();
+        if (btn.dataset.bact === "status") {
+          const next = prompt(`Set status for ${booking.reference_code}:\n${CONFIG.BOOKING_STATUSES.join(", ")}`, booking.status);
+          if (!next || !CONFIG.BOOKING_STATUSES.includes(next)) return;
+          const { error } = await db.from("bookings").update({ status: next }).eq("id", bid);
+          if (error) alert("Failed: " + error.message);
+          else {
+            // Auto-create payment record when a booking completes
+            if (next === "completed") await ensurePayment(booking);
+            loadAll();
+          }
+        } else if (btn.dataset.bact === "details") {
+          // Set the billable details (needed before a booking can pay out correctly)
+          const dur = prompt(`Duration in hours (current: ${booking.duration_hours ?? "not set"}):`, booking.duration_hours ?? "");
+          if (dur === null) return;
+          const rate = prompt(`Hourly rate in CAD (current: ${booking.hourly_rate}):`, booking.hourly_rate);
+          if (rate === null) return;
+          const sched = prompt(
+            "Scheduled date/time as YYYY-MM-DDTHH:MM (24h), blank = leave unchanged:",
+            booking.scheduled_at ? String(booking.scheduled_at).slice(0, 16) : ""
+          );
+          if (sched === null) return;
+          const updates = {};
+          if (dur.trim() !== "") {
+            const d = parseFloat(dur);
+            if (isNaN(d) || d <= 0) { alert("Invalid duration."); return; }
+            updates.duration_hours = d;
+          }
+          if (rate.trim() !== "") {
+            const r = parseFloat(rate);
+            if (isNaN(r) || r < 0) { alert("Invalid rate."); return; }
+            updates.hourly_rate = r;
+          }
+          if (sched.trim() !== "") {
+            const dt = new Date(sched.trim());
+            if (isNaN(dt.getTime())) { alert("Invalid date/time."); return; }
+            updates.scheduled_at = dt.toISOString();
+          }
+          if (!Object.keys(updates).length) return;
+          const { error } = await db.from("bookings").update(updates).eq("id", bid);
+          if (error) alert("Failed: " + error.message); else loadAll();
+        } else {
+          openAssignModal(booking);
+        }
+      });
+    });
+  }
+
+  async function ensurePayment(booking) {
+    const { data: existing } = await db.from("payments").select("id").eq("booking_id", booking.id).single();
+    if (existing) return;
+    const hours = Number(booking.duration_hours) || 0;
+    const rate = Number(booking.hourly_rate) || 0;
+    const total = hours * rate;
+    const fee = total * Number(booking.commission_rate || CONFIG.COMMISSION_RATE);
+    await db.from("payments").insert({
+      booking_id: booking.id,
+      amount_total: total,
+      platform_fee: fee,
+      psw_payout: total - fee,
+      payout_status: "pending"
+    });
+  }
+
+  /* ---------- Assign modal with smart matching ---------- */
+  function openAssignModal(booking) {
+    currentBooking = booking;
+    const ranked = scorePSWs(booking, activePSWs).slice(0, 8);
+    const list = $("matchList");
+    list.innerHTML = ranked.length ? "" : `<p class="muted">No active PSWs to suggest. Approve some PSWs first.</p>`;
+    ranked.forEach(({ psw, score, reasons }) => {
+      const div = document.createElement("div");
+      div.className = "card mb";
+      div.style.padding = "14px";
+      div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <strong>${esc(psw.full_name)}</strong>
+          <span class="match-score">${score} pts</span>
+        </div>
+        <div class="small muted">${esc(psw.city)} · ${psw.experience_years} yrs · ★ ${Number(psw.rating_avg || 0).toFixed(1)}</div>
+        <details class="small mt"><summary>Why this match?</summary><div class="match-reasons">${reasons.map(esc).join("<br>")}</div></details>
+        <button class="btn small mt" data-assign="${psw.id}">Assign this PSW</button>`;
+      list.appendChild(div);
+    });
+    list.querySelectorAll("button[data-assign]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const { error } = await db.from("bookings").update({
+          psw_id: btn.dataset.assign,
+          status: currentBooking.status === "requested" ? "accepted" : currentBooking.status
+        }).eq("id", currentBooking.id);
+        if (error) alert("Assign failed: " + error.message);
+        else { $("assignModal").classList.add("hidden"); loadAll(); }
+      });
+    });
+    $("assignModal").classList.remove("hidden");
+  }
+  $("assignClose").addEventListener("click", () => $("assignModal").classList.add("hidden"));
+  $("assignModal").addEventListener("click", (e) => {
+    if (e.target === $("assignModal")) $("assignModal").classList.add("hidden");
+  });
+
+  /* ---------- PSW roster ---------- */
+  async function loadPSWs() {
+    const { data } = await db.from("psws").select("*").order("created_at", { ascending: false });
+    const box = $("pswList");
+    if (!data || !data.length) { box.innerHTML = `<p class="muted">No PSWs yet.</p>`; return; }
+    box.innerHTML = `<div class="table-wrap"><table>
+      <tr><th>Name</th><th>Contact</th><th>Rating</th><th>Status</th><th>Actions</th></tr>
+      ${data.map(p => `
+        <tr>
+          <td><strong>${esc(p.full_name)}</strong><br><span class="small muted">${esc(p.city)} · ${p.experience_years} yrs</span></td>
+          <td class="small">${esc(p.email)}<br>${esc(p.phone)}</td>
+          <td>★ ${Number(p.rating_avg || 0).toFixed(1)} <span class="small muted">(${p.ratings_count || 0})</span></td>
+          <td>${badge(p.status)}</td>
+          <td style="white-space:nowrap;">
+            ${p.status === "active"
+              ? `<button class="btn small danger" data-pact="suspend" data-pid="${p.id}">Suspend</button>`
+              : p.status === "suspended"
+                ? `<button class="btn small" data-pact="reactivate" data-pid="${p.id}">Reactivate</button>`
+                : ""}
+          </td>
+        </tr>`).join("")}
+    </table></div>`;
+    box.querySelectorAll("button[data-pact]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const status = btn.dataset.pact === "suspend" ? "suspended" : "active";
+        if (!confirm(`${status === "suspended" ? "Suspend" : "Reactivate"} this PSW?`)) return;
+        const { error } = await db.from("psws").update({ status }).eq("id", btn.dataset.pid);
+        if (error) alert("Failed: " + error.message); else loadAll();
+      });
+    });
+  }
+
+  /* ---------- Payouts ---------- */
+  async function loadPayouts() {
+    // Aggregate unpaid completed-booking payouts per PSW
+    const { data } = await db.from("payments")
+      .select("id, psw_payout, platform_fee, payout_status, paid_at, booking_id, bookings(reference_code, psw_id, psws(full_name))")
+      .order("created_at", { ascending: false }).limit(200);
+    const box = $("payoutList");
+    if (!data || !data.length) { box.innerHTML = `<p class="muted">No payments yet. Payments are created automatically when a booking is marked completed.</p>`; return; }
+
+    const byPsw = {};
+    data.forEach(pm => {
+      const pid = pm.bookings?.psw_id;
+      if (!pid) return;
+      byPsw[pid] = byPsw[pid] || { name: pm.bookings?.psws?.full_name || "?", owed: 0, paid: 0, items: [] };
+      byPsw[pid].items.push(pm);
+      if (pm.payout_status === "pending") byPsw[pid].owed += Number(pm.psw_payout);
+      else byPsw[pid].paid += Number(pm.psw_payout);
+    });
+
+    box.innerHTML = Object.entries(byPsw).map(([pid, g]) => `
+      <div class="card mb">
+        <h3>${esc(g.name)}</h3>
+        <p>Owed: <strong>${money(g.owed)}</strong> · Paid to date: ${money(g.paid)}</p>
+        <div class="table-wrap"><table>
+          <tr><th>Booking</th><th>PSW payout</th><th>Platform fee</th><th>Status</th><th></th></tr>
+          ${g.items.map(pm => `
+            <tr>
+              <td>${esc(pm.bookings?.reference_code || pm.booking_id.slice(0, 8))}</td>
+              <td>${money(pm.psw_payout)}</td>
+              <td>${money(pm.platform_fee)}</td>
+              <td>${badge(pm.payout_status)}</td>
+              <td>${pm.payout_status === "pending"
+                ? `<button class="btn small" data-pay="${pm.id}" data-psw="${pid}">Mark paid</button>` : ""}</td>
+            </tr>`).join("")}
+        </table></div>
+      </div>`).join("");
+
+    box.querySelectorAll("button[data-pay]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("Mark this payout as paid? Record the real-world payment (e-transfer etc.) separately.")) return;
+        const { error } = await db.from("payments")
+          .update({ payout_status: "paid", paid_at: new Date().toISOString() })
+          .eq("id", btn.dataset.pay);
+        if (error) alert("Failed: " + error.message); else loadAll();
+      });
+    });
+  }
+
+  /* ---------- Reviews ---------- */
+  async function loadReviews() {
+    const { data } = await db.from("reviews")
+      .select("*, bookings(reference_code)").order("created_at", { ascending: false }).limit(100);
+    const box = $("reviewList");
+    if (!data || !data.length) { box.innerHTML = `<p class="muted">No reviews yet.</p>`; return; }
+    box.innerHTML = `<div class="table-wrap"><table>
+      <tr><th>Booking</th><th>Rating</th><th>From</th><th>Comment</th><th>Date</th></tr>
+      ${data.map(r => `
+        <tr>
+          <td>${esc(r.bookings?.reference_code || "—")}</td>
+          <td>${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</td>
+          <td>${esc(r.reviewer_type)}</td>
+          <td class="small">${esc(r.comment || "—")}</td>
+          <td class="small">${fmtDate(r.created_at)}</td>
+        </tr>`).join("")}
+    </table></div>`;
+  }
+})();
+</script>
+</body>
+</html>
