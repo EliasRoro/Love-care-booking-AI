@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSW Portal — Love-Care-Support</title>
+  <meta name="description" content="PSW sign-in: view your assigned care jobs, accept or decline, and track your visits.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="index.html"><span data-brand>Love-Care-Support</span><span class="dot">.</span></a>
+    <nav class="nav-links">
+      <a href="about.html">About</a>
+      <a href="track.html">Track booking</a>
+      <a href="login.html">Sign in</a>
+      <a href="book.html" class="btn small">Book care</a>
+    </nav>
+  </div>
+</header>
+
+<section>
+  <div class="container narrow">
+
+    <!-- ================= AUTH VIEW ================= -->
+    <div id="authView" class="form-shell">
+      <h2 class="section-title">PSW sign-in</h2>
+      <p class="section-sub">Sign in with the email address you used on your PSW application to see your assigned jobs.</p>
+      <div class="form-error" id="authError" role="alert"></div>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" required autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" required autocomplete="current-password">
+        </div>
+        <button class="btn" type="submit" id="loginBtn">Sign in</button>
+        <p class="small muted mt">Don't have a password yet? <a href="#" id="showSignup">Create your PSW account</a></p>
+      </form>
+
+      <form id="signupForm" class="hidden">
+        <div class="field">
+          <label for="signupEmail">Email (must match your PSW application)</label>
+          <input type="email" id="signupEmail" required autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="signupPassword">Choose a password</label>
+          <input type="password" id="signupPassword" required minlength="6" autocomplete="new-password">
+        </div>
+        <button class="btn" type="submit" id="signupBtn">Create account</button>
+        <p class="small muted mt">Already have an account? <a href="#" id="showLogin">Sign in</a></p>
+      </form>
+
+      <div id="checkEmailNote" class="hidden">
+        <p class="small">Account created — <strong>check your email</strong> and click the confirmation link, then sign in above.</p>
+        <p class="small muted mt"><a href="#" id="backToLogin">Back to sign-in</a></p>
+      </div>
+
+      <div id="resetView" class="hidden">
+        <h3>Choose a new password</h3>
+        <div class="form-error" id="resetError" role="alert"></div>
+        <form id="resetForm">
+          <div class="field">
+            <label for="newPassword">New password</label>
+            <input type="password" id="newPassword" required minlength="6" autocomplete="new-password">
+          </div>
+          <button class="btn" type="submit" id="resetBtn">Set new password</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= PORTAL VIEW ================= -->
+    <div id="portalView" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div>
+          <h2 class="section-title" style="margin-bottom:2px;">My jobs</h2>
+          <p class="section-sub" id="welcomeLine" style="margin-top:0;"></p>
+        </div>
+        <button class="btn small" id="logoutBtn" type="button">Sign out</button>
+      </div>
+      <div class="form-error" id="portalError" role="alert"></div>
+      <div id="statusNotice"></div>
+      <div id="photoCard" class="card mb hidden" style="padding:18px;">
+        <strong>Your profile photo</strong>
+        <p class="small muted">Shown to clients <em>only after</em> you're assigned to their booking, so they know who to expect. Optional.</p>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <img id="photoPreview" alt="Your profile photo" style="width:96px;height:96px;object-fit:cover;border-radius:50%;display:none;">
+          <div>
+            <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp">
+            <div><button class="btn small mt" id="photoUploadBtn" type="button">Upload photo</button></div>
+            <p class="small muted" id="photoMsg" style="margin-bottom:0;"></p>
+          </div>
+        </div>
+      </div>
+      <div id="jobsList" class="mt"></div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="f-brand"><span data-brand>Love-Care-Support</span><span class="dot">.</span></div>
+        <p class="small">Verified PSWs, on demand — across the Greater Toronto Area.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="about.html">About us</a></li>
+          <li><a href="book.html">Book care</a></li>
+          <li><a href="join.html">Join as a PSW</a></li>
+          <li><a href="track.html">Track your booking</a></li>
+          <li><a href="login.html">Sign in</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:eliassaychelem@gmail.com">eliassaychelem@gmail.com</a></li>
+          <li><a href="tel:+12266006986">(226) 600-6986</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="fine">© <span data-year>2026</span> <span data-brand>Love-Care-Support</span>. PSWs provide non-medical support services only and work as independent contractors.</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/motion.js"></script>
+<script>
+(function () {
+  /* Supabase client - inlined so no external file can fail to load. */
+  let supabase = null;
+  function getSupabase() {
+    if (supabase) return supabase;
+    if (typeof CONFIG === "undefined") throw new Error("CONFIG is not loaded.");
+    if (!CONFIG.SUPABASE_URL || CONFIG.SUPABASE_URL === "YOUR_SUPABASE_URL" ||
+        !CONFIG.SUPABASE_ANON_KEY || CONFIG.SUPABASE_ANON_KEY === "YOUR_SUPABASE_ANON_KEY") {
+      throw new Error("Supabase is not configured yet. Set SUPABASE_URL and SUPABASE_ANON_KEY in js/config.js.");
+    }
+    if (typeof window.supabase === "undefined" || !window.supabase.createClient) {
+      throw new Error("Supabase JS library failed to load. Check your network connection.");
+    }
+    const key = CONFIG.SUPABASE_ANON_KEY;
+    // The publishable key (sb_publishable_...) is opaque, not a JWT.
+    // supabase-js sends it as `Authorization: Bearer`, which Supabase's gateway
+    // mishandles, breaking RLS. Strip it; the `apikey` header alone is correct.
+    // Real user session JWTs (PSW/admin login) are left untouched.
+    const cleanFetch = (url, options) => {
+      const headers = new Headers((options && options.headers) || {});
+      if (headers.get("Authorization") === "Bearer " + key) headers.delete("Authorization");
+      if (!headers.has("apikey")) headers.set("apikey", key);
+      return fetch(url, Object.assign({}, options, { headers: headers }));
+    };
+    supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, key, {
+      global: { fetch: cleanFetch }
+    });
+    return supabase;
+  }
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const fmtWhen = (iso) => iso ? new Date(iso).toLocaleString("en-CA", { dateStyle: "medium", timeStyle: "short" }) : "To be scheduled";
+
+  const STATUS_LABEL = {
+    requested: "New — needs your response",
+    accepted: "Accepted",
+    in_progress: "In progress",
+    completed: "Completed",
+    cancelled: "Cancelled"
+  };
+
+  let db = null;
+  let myPsw = null;
+  let currentUser = null;
+
+  function showError(box, msg) {
+    const el = $(box);
+    el.textContent = msg;
+    el.classList.add("show");
+  }
+  function clearError(box) { $(box).classList.remove("show"); }
+
+  function showAuth() {
+    $("authView").classList.remove("hidden");
+    $("portalView").classList.add("hidden");
+  }
+  function showPortal() {
+    $("authView").classList.add("hidden");
+    $("portalView").classList.remove("hidden");
+  }
+
+  /* ---------- Auth ---------- */
+  $("showSignup").addEventListener("click", (e) => {
+    e.preventDefault();
+    $("loginForm").classList.add("hidden");
+    $("signupForm").classList.remove("hidden");
+    clearError("authError");
+  });
+  $("showLogin").addEventListener("click", (e) => {
+    e.preventDefault();
+    $("signupForm").classList.add("hidden");
+    $("loginForm").classList.remove("hidden");
+    clearError("authError");
+  });
+  $("backToLogin").addEventListener("click", (e) => {
+    e.preventDefault();
+    $("checkEmailNote").classList.add("hidden");
+    $("signupForm").classList.add("hidden");
+    $("loginForm").classList.remove("hidden");
+  });
+
+  $("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearError("authError");
+    const btn = $("loginBtn");
+    btn.disabled = true; btn.textContent = "Signing in…";
+    try {
+      db = getSupabase();
+      const { error } = await db.auth.signInWithPassword({
+        email: $("loginEmail").value.trim(),
+        password: $("loginPassword").value
+      });
+      if (error) throw error;
+      await loadPortal();
+    } catch (err) {
+      showError("authError", err.message || "Sign-in failed. Check your email and password.");
+    } finally {
+      btn.disabled = false; btn.textContent = "Sign in";
+    }
+  });
+
+  $("signupForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearError("authError");
+    const btn = $("signupBtn");
+    btn.disabled = true; btn.textContent = "Creating account…";
+    try {
+      db = getSupabase();
+      const { data, error } = await db.auth.signUp({
+        email: $("signupEmail").value.trim(),
+        password: $("signupPassword").value
+      });
+      if (error) throw error;
+      if (!data.session) {
+        // Email confirmation is on — user must click the link first.
+        $("signupForm").classList.add("hidden");
+        $("checkEmailNote").classList.remove("hidden");
+      } else {
+        await loadPortal();
+      }
+    } catch (err) {
+      showError("authError", err.message || "Could not create the account.");
+    } finally {
+      btn.disabled = false; btn.textContent = "Create account";
+    }
+  });
+
+  $("logoutBtn").addEventListener("click", async () => {
+    try { await getSupabase().auth.signOut(); } catch (e) {}
+    myPsw = null;
+    currentUser = null;
+    $("photoCard").classList.add("hidden");
+    showAuth();
+  });
+
+  /* ---------- Profile photo ---------- */
+  $("photoUploadBtn").addEventListener("click", async () => {
+    const msg = $("photoMsg");
+    msg.textContent = "";
+    const file = $("photoInput").files[0];
+    if (!file) { msg.textContent = "Choose a photo first."; return; }
+    if (!file.type.startsWith("image/")) { msg.textContent = "Please choose an image file (JPG or PNG)."; return; }
+    if (file.size > 5 * 1024 * 1024) { msg.textContent = "Photo must be under 5 MB."; return; }
+    const btn = $("photoUploadBtn");
+    btn.disabled = true; btn.textContent = "Uploading…";
+    try {
+      const path = currentUser.id + "/photo.jpg";
+      const { error: upErr } = await db.storage.from("psw-photos").upload(path, file, {
+        upsert: true,
+        contentType: file.type
+      });
+      if (upErr) throw upErr;
+      const publicUrl = CONFIG.SUPABASE_URL + "/storage/v1/object/public/psw-photos/" + path;
+      const { error: rpcErr } = await db.rpc("set_my_psw_photo", { p_url: publicUrl });
+      if (rpcErr) throw rpcErr;
+      myPsw.photo_url = publicUrl;
+      const img = $("photoPreview");
+      img.src = publicUrl + "?t=" + Date.now();
+      img.style.display = "block";
+      msg.textContent = "Photo updated.";
+    } catch (err) {
+      msg.textContent = err.message || "Upload failed. Try again.";
+    } finally {
+      btn.disabled = false; btn.textContent = "Upload photo";
+    }
+  });
+
+  /* ---------- Portal ---------- */
+  async function loadPortal() {
+    clearError("portalError");
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) { showAuth(); return; }
+
+    const { data: psw, error } = await db.from("psws")
+      .select("id, full_name, email, city, status, photo_url")
+      .eq("email", (user.email || "").toLowerCase())
+      .maybeSingle();
+    if (error) { showError("portalError", error.message); showPortal(); return; }
+    currentUser = user;
+
+    if (!psw) {
+      $("welcomeLine").textContent = "";
+      $("statusNotice").innerHTML = `<div class="card mb"><p><strong>No PSW application found</strong> for ${esc(user.email)}.</p>
+        <p class="small muted">Your sign-in email must match the email on your application. <a href="join.html">Apply here</a> if you haven't yet.</p></div>`;
+      $("jobsList").innerHTML = "";
+      showPortal();
+      return;
+    }
+
+    myPsw = psw;
+    $("welcomeLine").textContent = "Signed in as " + psw.full_name + " (" + psw.email + ")";
+
+    if (psw.status !== "active") {
+      const notes = {
+        applied: "Thanks for applying — your application is under review. You'll see jobs here once you're approved.",
+        verifying: "Your documents are being verified. You'll see jobs here once you're approved.",
+        suspended: "Your account is currently suspended. Please contact us for help.",
+        rejected: "Your application wasn't approved. Contact us if you think this is a mistake."
+      };
+      $("statusNotice").innerHTML = `<div class="card mb"><p><strong>Application status: ${esc(psw.status)}</strong></p>
+        <p class="small muted">${esc(notes[psw.status] || "Contact us for help with your account.")}</p></div>`;
+      $("jobsList").innerHTML = "";
+      showPortal();
+      return;
+    }
+
+    $("statusNotice").innerHTML = "";
+    // Profile photo card
+    $("photoCard").classList.remove("hidden");
+    if (psw.photo_url) {
+      const img = $("photoPreview");
+      img.src = psw.photo_url;
+      img.style.display = "block";
+    }
+    await loadJobs();
+    showPortal();
+  }
+
+  async function loadJobs() {
+    const { data: jobs, error } = await db.from("bookings")
+      .select("id, reference_code, client_name, client_phone, address, city, service_types, preferred_times, scheduled_at, duration_hours, status, notes")
+      .eq("psw_id", myPsw.id)
+      .order("scheduled_at", { ascending: true, nullsFirst: false });
+    if (error) { showError("portalError", error.message); return; }
+
+    const list = $("jobsList");
+    if (!jobs || !jobs.length) {
+      list.innerHTML = `<div class="card"><p class="muted">No jobs assigned yet. When the coordinator assigns you a visit, it will appear here.</p></div>`;
+      return;
+    }
+
+    list.innerHTML = jobs.map(jobCard).join("");
+    list.querySelectorAll("[data-action]").forEach(btn => {
+      btn.addEventListener("click", () => jobAction(btn.dataset.id, btn.dataset.action, btn));
+    });
+  }
+
+  function jobCard(j) {
+    const actions = {
+      requested: `<button class="btn small" data-action="accept" data-id="${j.id}">Accept job</button>
+                  <button class="btn small" data-action="decline" data-id="${j.id}" style="background:#fff;color:#b3261e;border:1px solid #b3261e;">Decline</button>`,
+      accepted: `<button class="btn small" data-action="start" data-id="${j.id}">Start visit</button>`,
+      in_progress: `<button class="btn small" data-action="complete" data-id="${j.id}">Mark complete</button>`
+    }[j.status] || "";
+
+    return `<div class="card mb" style="padding:18px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+        <strong>${esc(j.reference_code)}</strong>
+        <span class="badge ${esc(j.status)}">${esc(STATUS_LABEL[j.status] || j.status)}</span>
+      </div>
+      <div class="mt">
+        <div><strong>Client:</strong> ${esc(j.client_name)} · <a href="tel:${esc(j.client_phone)}">${esc(j.client_phone)}</a></div>
+        <div><strong>Address:</strong> ${esc(j.address)}, ${esc(j.city)}</div>
+        <div><strong>When:</strong> ${esc(fmtWhen(j.scheduled_at))}${j.duration_hours ? " · " + esc(String(j.duration_hours)) + " hrs" : ""}</div>
+        ${j.preferred_times ? `<div><strong>Preferred times:</strong> ${esc(j.preferred_times)}</div>` : ""}
+        ${j.service_types && j.service_types.length ? `<div><strong>Services:</strong> ${esc(j.service_types.join(", "))}</div>` : ""}
+        ${j.notes ? `<div class="small muted mt"><strong>Care notes:</strong> ${esc(j.notes)}</div>` : ""}
+      </div>
+      ${actions ? `<div class="mt" style="display:flex;gap:8px;flex-wrap:wrap;">${actions}</div>` : ""}
+    </div>`;
+  }
+
+  async function jobAction(id, action, btn) {
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = "Saving…";
+    clearError("portalError");
+    try {
+      let patch = null;
+      if (action === "accept") patch = { status: "accepted" };
+      else if (action === "start") patch = { status: "in_progress" };
+      else if (action === "complete") patch = { status: "completed" };
+      else if (action === "decline") {
+        if (!confirm("Decline this job? It will go back to the coordinator for reassignment.")) return;
+        patch = { psw_id: null, status: "requested" };
+      }
+      const { error } = await db.from("bookings").update(patch).eq("id", id);
+      if (error) throw error;
+      await loadJobs();
+    } catch (err) {
+      showError("portalError", err.message || "Could not update the job.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = orig;
+    }
+  }
+
+  /* ---------- Password reset (from email link) ---------- */
+  $("resetForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errBox = $("resetError");
+    errBox.classList.remove("show");
+    const btn = $("resetBtn");
+    btn.disabled = true; btn.textContent = "Saving…";
+    try {
+      const { error } = await getSupabase().auth.updateUser({
+        password: $("newPassword").value
+      });
+      if (error) throw error;
+      // Clear the recovery token from the URL, then enter the portal.
+      history.replaceState(null, "", location.pathname);
+      db = getSupabase();
+      await loadPortal();
+    } catch (err) {
+      errBox.textContent = err.message || "Could not set the new password. The link may have expired — request a new one.";
+      errBox.classList.add("show");
+    } finally {
+      btn.disabled = false; btn.textContent = "Set new password";
+    }
+  });
+
+  /* ---------- Init ---------- */
+  (async function init() {
+    try {
+      db = getSupabase();
+      const { data: { session } } = await db.auth.getSession();
+      // supabase-js consumes the recovery token from the URL hash into a session.
+      const isRecovery = new URLSearchParams(location.hash.replace(/^#/, "")).get("type") === "recovery";
+      if (isRecovery && session) {
+        $("loginForm").classList.add("hidden");
+        $("signupForm").classList.add("hidden");
+        $("resetView").classList.remove("hidden");
+        return;
+      }
+      if (session) await loadPortal();
+      else showAuth();
+    } catch (err) {
+      showError("authError", err.message);
+    }
+  })();
+})();
+</script>
+</body>
+</html>

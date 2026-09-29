@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account — Love-Care-Support</title>
+  <meta name="description" content="Client sign-in: view all your care bookings, their status, and your assigned PSWs in one place.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="index.html"><span data-brand>Love-Care-Support</span><span class="dot">.</span></a>
+    <nav class="nav-links">
+      <a href="about.html">About</a>
+      <a href="track.html">Track booking</a>
+      <a href="login.html">Sign in</a>
+      <a href="book.html" class="btn small">Book care</a>
+    </nav>
+  </div>
+</header>
+
+<section>
+  <div class="container narrow">
+
+    <!-- ================= AUTH VIEW ================= -->
+    <div id="authView" class="form-shell">
+      <h2 class="section-title">My account</h2>
+      <p class="section-sub">Sign in with the email address you used when booking to see all your bookings in one place.</p>
+      <div class="form-error" id="authError" role="alert"></div>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" required autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" required autocomplete="current-password">
+        </div>
+        <button class="btn" type="submit" id="loginBtn">Sign in</button>
+        <p class="small muted mt" style="margin-bottom:0;">
+          Don't have a password yet? <a href="#" id="showSignup">Create your account</a><br>
+          <a href="#" id="showForgot">Forgot password?</a>
+        </p>
+      </form>
+
+      <form id="signupForm" class="hidden">
+        <div class="field">
+          <label for="signupEmail">Email (must match your booking email)</label>
+          <input type="email" id="signupEmail" required autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="signupPassword">Choose a password</label>
+          <input type="password" id="signupPassword" required minlength="6" autocomplete="new-password">
+        </div>
+        <button class="btn" type="submit" id="signupBtn">Create account</button>
+        <p class="small muted mt" style="margin-bottom:0;"><a href="#" id="showLogin">Back to sign-in</a></p>
+      </form>
+
+      <form id="forgotForm" class="hidden">
+        <p class="small muted">Enter your account email and we'll send you a password reset link.</p>
+        <div class="field">
+          <label for="forgotEmail">Email</label>
+          <input type="email" id="forgotEmail" required autocomplete="username">
+        </div>
+        <button class="btn" type="submit" id="forgotBtn">Send reset link</button>
+        <p class="small muted mt" style="margin-bottom:0;"><a href="#" id="backToLogin2">Back to sign-in</a></p>
+      </form>
+
+      <div id="checkEmailNote" class="hidden">
+        <p class="small">Account created — <strong>check your email</strong> and click the confirmation link, then sign in above.</p>
+        <p class="small muted mt"><a href="#" id="backToLogin">Back to sign-in</a></p>
+      </div>
+
+      <div id="resetSentNote" class="hidden">
+        <p class="small"><strong>Reset link sent.</strong> Check your email and click the link to choose a new password.</p>
+        <p class="small muted" style="margin-bottom:0;"><a href="#" id="backToLogin3">Back to sign-in</a></p>
+      </div>
+
+      <div id="resetView" class="hidden">
+        <h3>Choose a new password</h3>
+        <div class="form-error" id="resetError" role="alert"></div>
+        <form id="resetForm">
+          <div class="field">
+            <label for="newPassword">New password</label>
+            <input type="password" id="newPassword" required minlength="6" autocomplete="new-password">
+          </div>
+          <button class="btn" type="submit" id="resetBtn">Set new password</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= ACCOUNT VIEW ================= -->
+    <div id="accountView" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div>
+          <h2 class="section-title" style="margin-bottom:2px;">My bookings</h2>
+          <p class="section-sub" id="welcomeLine" style="margin-top:0;"></p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <a class="btn small secondary" href="book.html">New booking</a>
+          <button class="btn small" id="logoutBtn" type="button">Sign out</button>
+        </div>
+      </div>
+      <div class="form-error" id="accountError" role="alert"></div>
+      <div id="bookingsList" class="mt"></div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="f-brand"><span data-brand>Love-Care-Support</span><span class="dot">.</span></div>
+        <p class="small">Verified PSWs, on demand — across the Greater Toronto Area.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="about.html">About us</a></li>
+          <li><a href="book.html">Book care</a></li>
+          <li><a href="join.html">Join as a PSW</a></li>
+          <li><a href="track.html">Track your booking</a></li>
+          <li><a href="login.html">Sign in</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:eliassaychelem@gmail.com">eliassaychelem@gmail.com</a></li>
+          <li><a href="tel:+12266006986">(226) 600-6986</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="fine">© <span data-year>2026</span> <span data-brand>Love-Care-Support</span>. PSWs provide non-medical support services only and work as independent contractors.</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/motion.js"></script>
+<script>
+(function () {
+  /* Supabase client - inlined so no external file can fail to load. */
+  let supabase = null;
+  function getSupabase() {
+    if (supabase) return supabase;
+    if (typeof CONFIG === "undefined") throw new Error("CONFIG is not loaded.");
+    if (!CONFIG.SUPABASE_URL || CONFIG.SUPABASE_URL === "YOUR_SUPABASE_URL" ||
+        !CONFIG.SUPABASE_ANON_KEY || CONFIG.SUPABASE_ANON_KEY === "YOUR_SUPABASE_ANON_KEY") {
+      throw new Error("Supabase is not configured yet. Set SUPABASE_URL and SUPABASE_ANON_KEY in js/config.js.");
+    }
+    if (typeof window.supabase === "undefined" || !window.supabase.createClient) {
+      throw new Error("Supabase JS library failed to load. Check your network connection.");
+    }
+    const key = CONFIG.SUPABASE_ANON_KEY;
+    // The publishable key (sb_publishable_...) is opaque, not a JWT.
+    // supabase-js sends it as `Authorization: Bearer`, which Supabase's gateway
+    // mishandles, breaking RLS. Strip it; the `apikey` header alone is correct.
+    // Real user session JWTs (client login) are left untouched.
+    const cleanFetch = (url, options) => {
+      const headers = new Headers((options && options.headers) || {});
+      if (headers.get("Authorization") === "Bearer " + key) headers.delete("Authorization");
+      if (!headers.has("apikey")) headers.set("apikey", key);
+      return fetch(url, Object.assign({}, options, { headers: headers }));
+    };
+    supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, key, {
+      global: { fetch: cleanFetch }
+    });
+    return supabase;
+  }
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const fmtWhen = (iso) => iso ? new Date(iso).toLocaleString("en-CA", { dateStyle: "medium", timeStyle: "short" }) : "To be scheduled";
+
+  const STATUS_LABEL = {
+    requested: "Request received",
+    accepted: "PSW assigned",
+    in_progress: "Visit in progress",
+    completed: "Completed",
+    cancelled: "Cancelled"
+  };
+
+  let db = null;
+
+  function showError(box, msg) {
+    const el = $(box);
+    el.textContent = msg;
+    el.classList.add("show");
+  }
+  function clearError(box) { $(box).classList.remove("show"); }
+  function showOnly(id) {
+    ["loginForm", "signupForm", "forgotForm", "checkEmailNote", "resetSentNote", "resetView"].forEach(f => $(f).classList.add("hidden"));
+    if (id) $(id).classList.remove("hidden");
+  }
+  function showAuth() {
+    $("authView").classList.remove("hidden");
+    $("accountView").classList.add("hidden");
+  }
+  function showAccount() {
+    $("authView").classList.add("hidden");
+    $("accountView").classList.remove("hidden");
+  }
+
+  /* ---------- Auth ---------- */
+  $("showSignup").addEventListener("click", (e) => { e.preventDefault(); clearError("authError"); showOnly("signupForm"); });
+  $("showLogin").addEventListener("click", (e) => { e.preventDefault(); clearError("authError"); showOnly("loginForm"); });
+  $("showForgot").addEventListener("click", (e) => { e.preventDefault(); clearError("authError"); showOnly("forgotForm"); });
+  ["backToLogin", "backToLogin2", "backToLogin3"].forEach(id => {
+    $(id).addEventListener("click", (e) => { e.preventDefault(); clearError("authError"); showOnly("loginForm"); });
+  });
+
+  $("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearError("authError");
+    const btn = $("loginBtn");
+    btn.disabled = true; btn.textContent = "Signing in…";
+    try {
+      db = getSupabase();
+      const { error } = await db.auth.signInWithPassword({
+        email: $("loginEmail").value.trim(),
+        password: $("loginPassword").value
+      });
+      if (error) throw error;
+      await loadAccount();
+    } catch (err) {
+      showError("authError", err.message || "Sign-in failed. Check your email and password.");
+    } finally {
+      btn.disabled = false; btn.textContent = "Sign in";
+    }
+  });
+
+  $("signupForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearError("authError");
+    const btn = $("signupBtn");
+    btn.disabled = true; btn.textContent = "Creating account…";
+    try {
+      db = getSupabase();
+      const { data, error } = await db.auth.signUp({
+        email: $("signupEmail").value.trim(),
+        password: $("signupPassword").value
+      });
+      if (error) throw error;
+      if (!data.session) showOnly("checkEmailNote");
+      else await loadAccount();
+    } catch (err) {
+      showError("authError", err.message || "Could not create the account.");
+    } finally {
+      btn.disabled = false; btn.textContent = "Create account";
+    }
+  });
+
+  $("forgotForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearError("authError");
+    const btn = $("forgotBtn");
+    btn.disabled = true; btn.textContent = "Sending…";
+    try {
+      db = getSupabase();
+      const { error } = await db.auth.resetPasswordForEmail(
+        $("forgotEmail").value.trim(),
+        { redirectTo: window.location.origin + "/account.html" }
+      );
+      if (error) throw error;
+      showOnly("resetSentNote");
+    } catch (err) {
+      showError("authError", err.message || "Could not send the reset link. Try again.");
+    } finally {
+      btn.disabled = false; btn.textContent = "Send reset link";
+    }
+  });
+
+  $("resetForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errBox = $("resetError");
+    errBox.classList.remove("show");
+    const btn = $("resetBtn");
+    btn.disabled = true; btn.textContent = "Saving…";
+    try {
+      const { error } = await getSupabase().auth.updateUser({ password: $("newPassword").value });
+      if (error) throw error;
+      history.replaceState(null, "", location.pathname);
+      db = getSupabase();
+      await loadAccount();
+    } catch (err) {
+      errBox.textContent = err.message || "Could not set the new password. The link may have expired — request a new one.";
+      errBox.classList.add("show");
+    } finally {
+      btn.disabled = false; btn.textContent = "Set new password";
+    }
+  });
+
+  $("logoutBtn").addEventListener("click", async () => {
+    try { await getSupabase().auth.signOut(); } catch (e) {}
+    showOnly("loginForm");
+    showAuth();
+  });
+
+  /* ---------- Account ---------- */
+  async function loadAccount() {
+    clearError("accountError");
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) { showAuth(); return; }
+    $("welcomeLine").textContent = "Signed in as " + user.email;
+
+    const { data: bookings, error } = await db.rpc("my_bookings");
+    if (error) { showError("accountError", error.message); showAccount(); return; }
+
+    const list = $("bookingsList");
+    if (!bookings || !bookings.length) {
+      list.innerHTML = `<div class="card"><p><strong>No bookings found</strong> for ${esc(user.email)}.</p>
+        <p class="small muted">Bookings appear here when they're made with this email address. <a href="book.html">Book care</a> to get started, or <a href="track.html">track a booking</a> with a reference code.</p></div>`;
+      showAccount();
+      return;
+    }
+
+    const upcoming = bookings.filter(b => ["requested", "accepted", "in_progress"].includes(b.status));
+    const past = bookings.filter(b => !["requested", "accepted", "in_progress"].includes(b.status));
+    const card = (b) => `<div class="card mb" style="padding:18px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+        <strong>${esc(b.reference_code)}</strong>
+        <span class="badge ${esc(b.status)}">${esc(STATUS_LABEL[b.status] || b.status)}</span>
+      </div>
+      <div class="mt">
+        <div><strong>When:</strong> ${esc(fmtWhen(b.scheduled_at))}${b.duration_hours ? " · " + esc(String(b.duration_hours)) + " hrs" : ""}</div>
+        ${b.service_types && b.service_types.length ? `<div><strong>Services:</strong> ${esc(b.service_types.join(", "))}</div>` : ""}
+        <div><strong>Where:</strong> ${esc(b.address)}, ${esc(b.city)}</div>
+        <div><strong>Your PSW:</strong> ${b.psw_name ? `
+          <span style="display:inline-flex;align-items:center;gap:10px;vertical-align:middle;margin-left:4px;">
+            ${b.psw_photo ? `<img src="${esc(b.psw_photo)}" alt="Photo of your PSW" style="width:52px;height:52px;object-fit:cover;border-radius:50%;">` : ""}
+            ${esc(b.psw_name)}${b.psw_phone ? ` · <a href="tel:${esc(b.psw_phone)}">${esc(b.psw_phone)}</a>` : ""}
+          </span>` : '<span class="muted">Being matched — check back soon</span>'}</div>
+      </div>
+    </div>`;
+
+    list.innerHTML =
+      (upcoming.length ? `<h3 class="mt">Upcoming</h3>` + upcoming.map(card).join("") : "") +
+      (past.length ? `<h3 class="mt">Past</h3>` + past.map(card).join("") : "");
+    showAccount();
+  }
+
+  /* ---------- Init ---------- */
+  (async function init() {
+    try {
+      db = getSupabase();
+      const { data: { session } } = await db.auth.getSession();
+      const isRecovery = new URLSearchParams(location.hash.replace(/^#/, "")).get("type") === "recovery";
+      if (isRecovery && session) {
+        showOnly("resetView");
+        return;
+      }
+      if (session) await loadAccount();
+      else { showOnly("loginForm"); showAuth(); }
+    } catch (err) {
+      showOnly("loginForm");
+      showError("authError", err.message);
+    }
+  })();
+})();
+</script>
+</body>
+</html>

@@ -104,10 +104,44 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
-<script src="js/db-client.js"></script>
 <script src="js/matching.js"></script>
 <script>
 (function () {
+  /* Supabase client - inlined so no external file can fail to load. */
+  let supabase = null;
+  function getSupabase() {
+    if (supabase) return supabase;
+    if (typeof CONFIG === "undefined") throw new Error("CONFIG is not loaded.");
+    if (!CONFIG.SUPABASE_URL || CONFIG.SUPABASE_URL === "YOUR_SUPABASE_URL" ||
+        !CONFIG.SUPABASE_ANON_KEY || CONFIG.SUPABASE_ANON_KEY === "YOUR_SUPABASE_ANON_KEY") {
+      throw new Error("Supabase is not configured yet. Set SUPABASE_URL and SUPABASE_ANON_KEY in js/config.js.");
+    }
+    if (typeof window.supabase === "undefined" || !window.supabase.createClient) {
+      throw new Error("Supabase JS library failed to load. Check your network connection.");
+    }
+    const key = CONFIG.SUPABASE_ANON_KEY;
+    // The publishable key (sb_publishable_...) is opaque, not a JWT.
+    // supabase-js sends it as `Authorization: Bearer`, which Supabase's gateway
+    // mishandles, breaking RLS. Strip it; the `apikey` header alone is correct.
+    // Real user session JWTs (admin login) are left untouched.
+    const cleanFetch = (url, options) => {
+      const headers = new Headers((options && options.headers) || {});
+      if (headers.get("Authorization") === "Bearer " + key) headers.delete("Authorization");
+      if (!headers.has("apikey")) headers.set("apikey", key);
+      return fetch(url, Object.assign({}, options, { headers: headers }));
+    };
+    supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, key, {
+      global: { fetch: cleanFetch }
+    });
+    return supabase;
+  }
+  function makeReferenceCode() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    const prefix = (CONFIG.BRAND_NAME || "CN").replace(/[^A-Za-z]/g, "").slice(0, 2).toUpperCase() || "CN";
+    return prefix + "-" + code;
+  }
   let db = null;
   let activePSWs = [];
   let currentBooking = null;

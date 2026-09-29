@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Your Booking — Love-Care-Support</title>
+  <meta name="description" content="Check the status of your care booking with your reference code.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="index.html"><span data-brand>Love-Care-Support</span><span class="dot">.</span></a>
+    <nav class="nav-links">
+      <a href="about.html">About</a>
+      <a href="login.html">Sign in</a>
+      <a href="book.html" class="btn small">Book care</a>
+    </nav>
+  </div>
+</header>
+
+<section>
+  <div class="container narrow">
+    <div class="form-shell">
+      <h2 class="section-title">Track your booking</h2>
+      <p class="section-sub">Enter the reference code from your booking confirmation (it looks like <strong>LO-AB12CD</strong>) to see your booking status and your assigned PSW.</p>
+      <div class="form-error" id="trackError" role="alert"></div>
+      <form id="trackForm">
+        <div class="field">
+          <label for="refCode">Reference code</label>
+          <input type="text" id="refCode" required autocomplete="off" autocapitalize="characters"
+                 placeholder="LO-AB12CD" style="text-transform:uppercase;letter-spacing:1px;">
+        </div>
+        <button class="btn" type="submit" id="trackBtn">Check status</button>
+      </form>
+      <div id="result" class="mt"></div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="f-brand"><span data-brand>Love-Care-Support</span><span class="dot">.</span></div>
+        <p class="small">Verified PSWs, on demand — across the Greater Toronto Area.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="about.html">About us</a></li>
+          <li><a href="book.html">Book care</a></li>
+          <li><a href="join.html">Join as a PSW</a></li>
+          <li><a href="track.html">Track your booking</a></li>
+          <li><a href="login.html">Sign in</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:eliassaychelem@gmail.com">eliassaychelem@gmail.com</a></li>
+          <li><a href="tel:+12266006986">(226) 600-6986</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="fine">© <span data-year>2026</span> <span data-brand>Love-Care-Support</span>. PSWs provide non-medical support services only and work as independent contractors.</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/motion.js"></script>
+<script>
+(function () {
+  /* Supabase client - inlined so no external file can fail to load. */
+  let supabase = null;
+  function getSupabase() {
+    if (supabase) return supabase;
+    if (typeof CONFIG === "undefined") throw new Error("CONFIG is not loaded.");
+    if (!CONFIG.SUPABASE_URL || CONFIG.SUPABASE_URL === "YOUR_SUPABASE_URL" ||
+        !CONFIG.SUPABASE_ANON_KEY || CONFIG.SUPABASE_ANON_KEY === "YOUR_SUPABASE_ANON_KEY") {
+      throw new Error("Supabase is not configured yet. Set SUPABASE_URL and SUPABASE_ANON_KEY in js/config.js.");
+    }
+    if (typeof window.supabase === "undefined" || !window.supabase.createClient) {
+      throw new Error("Supabase JS library failed to load. Check your network connection.");
+    }
+    const key = CONFIG.SUPABASE_ANON_KEY;
+    // The publishable key (sb_publishable_...) is opaque, not a JWT.
+    // supabase-js sends it as `Authorization: Bearer`, which Supabase's gateway
+    // mishandles, breaking RLS. Strip it; the `apikey` header alone is correct.
+    const cleanFetch = (url, options) => {
+      const headers = new Headers((options && options.headers) || {});
+      if (headers.get("Authorization") === "Bearer " + key) headers.delete("Authorization");
+      if (!headers.has("apikey")) headers.set("apikey", key);
+      return fetch(url, Object.assign({}, options, { headers: headers }));
+    };
+    supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, key, {
+      global: { fetch: cleanFetch }
+    });
+    return supabase;
+  }
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const fmtWhen = (iso) => iso ? new Date(iso).toLocaleString("en-CA", { dateStyle: "full", timeStyle: "short" }) : "To be scheduled";
+
+  const STATUS_INFO = {
+    requested:   ["Request received", "We've got your request and are finding the right PSW for you."],
+    accepted:    ["PSW assigned", "A verified PSW has accepted your booking."],
+    in_progress: ["Visit in progress", "Your PSW is with you now."],
+    completed:   ["Completed", "This visit is complete. Thank you for choosing us."],
+    cancelled:   ["Cancelled", "This booking was cancelled. Contact us if you need help rebooking."]
+  };
+
+  $("trackForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errBox = $("trackError");
+    errBox.classList.remove("show");
+    const result = $("result");
+    result.innerHTML = "";
+    const btn = $("trackBtn");
+    btn.disabled = true; btn.textContent = "Checking…";
+    try {
+      const db = getSupabase();
+      const code = $("refCode").value.trim().toUpperCase();
+      const { data, error } = await db.rpc("booking_lookup", { p_ref: code });
+      if (error) throw error;
+      const b = Array.isArray(data) ? data[0] : data;
+      if (!b) {
+        errBox.textContent = "We couldn't find a booking with that reference code. Check the code and try again.";
+        errBox.classList.add("show");
+        return;
+      }
+      const [title, sub] = STATUS_INFO[b.status] || [b.status, ""];
+      result.innerHTML = `<div class="card" style="padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+          <strong>${esc(b.reference_code)}</strong>
+          <span class="badge ${esc(b.status)}">${esc(title)}</span>
+        </div>
+        <p class="small muted mt" style="margin-bottom:12px;">${esc(sub)}</p>
+        <div><strong>When:</strong> ${esc(fmtWhen(b.scheduled_at))}${b.duration_hours ? " · " + esc(String(b.duration_hours)) + " hrs" : ""}</div>
+        ${b.service_types && b.service_types.length ? `<div><strong>Services:</strong> ${esc(b.service_types.join(", "))}</div>` : ""}
+        <div><strong>Your PSW:</strong> ${b.psw_name ? `
+          <span style="display:inline-flex;align-items:center;gap:10px;vertical-align:middle;margin-left:4px;">
+            ${b.psw_photo ? `<img src="${esc(b.psw_photo)}" alt="Photo of your PSW" style="width:52px;height:52px;object-fit:cover;border-radius:50%;">` : ""}
+            ${esc(b.psw_name)}
+          </span>` : '<span class="muted">Being matched — check back soon</span>'}</div>
+        <p class="small muted mt">Questions? Email <a href="mailto:eliassaychelem@gmail.com">eliassaychelem@gmail.com</a> or call <a href="tel:+12266006986">(226) 600-6986</a>.</p>
+      </div>`;
+    } catch (err) {
+      errBox.textContent = err.message || "Something went wrong. Please try again.";
+      errBox.classList.add("show");
+    } finally {
+      btn.disabled = false; btn.textContent = "Check status";
+    }
+  });
+})();
+</script>
+</body>
+</html>

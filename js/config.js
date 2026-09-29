@@ -18,7 +18,7 @@ const CONFIG = {
 
   // -- Supabase backend (FILL THESE IN — see DEPLOY.md) ----------------------
   SUPABASE_URL: "https://fwgdelmxjtsozazpjmko.supabase.co",
-  SUPABASE_ANON_KEY: "sb_publishable_TUl1O_4ZnxDgbLsrzPuaYg_3SSolocH", // public anon key from Supabase dashboard
+  SUPABASE_ANON_KEY: "sb_publishable_TUl1O_4ZnxDgbLsrzPuaYg_3SSolocH", // public publishable key // public anon key from Supabase dashboard
 
   // -- Service areas (GTA to start; edit freely) -----------------------------
   SERVICE_AREAS: [
@@ -51,8 +51,8 @@ const CONFIG = {
   BOOKING_STATUSES: ["requested", "accepted", "in_progress", "completed", "cancelled"],
 
   // -- Contact (placeholder until business email/phone exist) -----------------
-  CONTACT_EMAIL: "eliassaychelem@gmail.com",   // <-- replace with business email
-  CONTACT_PHONE: "(226) 600-6986"        // <-- replace with business phone
+  CONTACT_EMAIL: "eliassaychelem@gmail.com",
+  CONTACT_PHONE: "(226) 600-6986"
 };
 
 // Make brand name available to every page without editing HTML.

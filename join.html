@@ -14,6 +14,8 @@
     <a class="brand" href="index.html"><span data-brand>Love-Care-Support</span><span class="dot">.</span></a>
     <nav class="nav-links">
       <a href="about.html">About</a>
+      <a href="track.html">Track booking</a>
+      <a href="login.html">Sign in</a>
       <a href="book.html">Book care</a>
     </nav>
   </div>
@@ -21,6 +23,41 @@
 
 <section>
   <div class="container narrow">
+<div class="card mb" id="returningPswCard">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div><strong>Already applied?</strong> <span class="small muted">Sign in to check your application status and jobs.</span></div>
+        <button class="btn small secondary" id="toggleSignin" type="button">Sign in</button>
+      </div>
+      <div id="signinPanel" class="hidden mt">
+        <div class="form-error" id="signinError" role="alert"></div>
+        <form id="signinForm">
+          <div class="field">
+            <label for="signinEmail">Email</label>
+            <input type="email" id="signinEmail" required autocomplete="username">
+          </div>
+          <div class="field">
+            <label for="signinPassword">Password</label>
+            <input type="password" id="signinPassword" required autocomplete="current-password">
+          </div>
+          <button class="btn small" type="submit" id="signinBtn">Sign in</button>
+          <p class="small muted mt" style="margin-bottom:0;"><a href="#" id="forgotLink">Forgot password?</a></p>
+        </form>
+        <form id="forgotForm" class="hidden">
+          <p class="small muted">Enter your account email and we'll send you a password reset link.</p>
+          <div class="field">
+            <label for="forgotEmail">Email</label>
+            <input type="email" id="forgotEmail" required autocomplete="username">
+          </div>
+          <button class="btn small" type="submit" id="forgotBtn">Send reset link</button>
+          <p class="small muted mt" style="margin-bottom:0;"><a href="#" id="backToSignin">Back to sign-in</a></p>
+        </form>
+        <div id="resetSentNote" class="hidden">
+          <p class="small"><strong>Reset link sent.</strong> Check your email and click the link to choose a new password.</p>
+          <p class="small muted" style="margin-bottom:0;"><a href="#" id="backToSignin2">Back to sign-in</a></p>
+        </div>
+      </div>
+    </div>
+
     <div id="formView" class="form-shell">
       <h2 class="section-title">Apply as a PSW</h2>
       <p class="section-sub">Join as an <strong>independent contractor</strong>: choose your own hours, accept the jobs you want, keep ~80% of every booking. Every visit is covered by our platform insurance at no cost to you.</p>
@@ -40,7 +77,7 @@
         </div>
         <div class="field">
           <label for="phone">Phone <span class="req">*</span></label>
-          <input type="tel" id="phone" required autocomplete="tel" placeholder="(416) 555-0100">
+          <input type="tel" id="phone" required autocomplete="tel" placeholder="(226) 600-6986">
         </div>
         <div class="field">
           <label for="city">Home city <span class="req">*</span></label>
@@ -122,13 +159,15 @@
           <li><a href="about.html">About us</a></li>
           <li><a href="book.html">Book care</a></li>
           <li><a href="join.html">Join as a PSW</a></li>
+          <li><a href="track.html">Track your booking</a></li>
+          <li><a href="login.html">Sign in</a></li>
         </ul>
       </div>
       <div>
         <h4>Contact</h4>
         <ul>
-          <li><a href="mailto:hello@example.com">hello@example.com</a></li>
-          <li><a href="tel:+14165550100">(416) 555-0100</a></li>
+          <li><a href="mailto:eliassaychelem@gmail.com">eliassaychelem@gmail.com</a></li>
+          <li><a href="tel:+14165550100">(226) 600-6986</a></li>
         </ul>
       </div>
     </div>
@@ -138,10 +177,44 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
-<script src="js/db-client.js"></script>
 <script src="js/motion.js"></script>
 <script>
 (function () {
+  /* Supabase client - inlined so no external file can fail to load. */
+  let supabase = null;
+  function getSupabase() {
+    if (supabase) return supabase;
+    if (typeof CONFIG === "undefined") throw new Error("CONFIG is not loaded.");
+    if (!CONFIG.SUPABASE_URL || CONFIG.SUPABASE_URL === "YOUR_SUPABASE_URL" ||
+        !CONFIG.SUPABASE_ANON_KEY || CONFIG.SUPABASE_ANON_KEY === "YOUR_SUPABASE_ANON_KEY") {
+      throw new Error("Supabase is not configured yet. Set SUPABASE_URL and SUPABASE_ANON_KEY in js/config.js.");
+    }
+    if (typeof window.supabase === "undefined" || !window.supabase.createClient) {
+      throw new Error("Supabase JS library failed to load. Check your network connection.");
+    }
+    const key = CONFIG.SUPABASE_ANON_KEY;
+    // The publishable key (sb_publishable_...) is opaque, not a JWT.
+    // supabase-js sends it as `Authorization: Bearer`, which Supabase's gateway
+    // mishandles, breaking RLS. Strip it; the `apikey` header alone is correct.
+    // Real user session JWTs (admin login) are left untouched.
+    const cleanFetch = (url, options) => {
+      const headers = new Headers((options && options.headers) || {});
+      if (headers.get("Authorization") === "Bearer " + key) headers.delete("Authorization");
+      if (!headers.has("apikey")) headers.set("apikey", key);
+      return fetch(url, Object.assign({}, options, { headers: headers }));
+    };
+    supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, key, {
+      global: { fetch: cleanFetch }
+    });
+    return supabase;
+  }
+  function makeReferenceCode() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    const prefix = (CONFIG.BRAND_NAME || "CN").replace(/[^A-Za-z]/g, "").slice(0, 2).toUpperCase() || "CN";
+    return prefix + "-" + code;
+  }
   // City + service area fields
   const citySel = document.getElementById("city");
   CONFIG.SERVICE_AREAS.forEach(c => {
@@ -231,7 +304,9 @@
       setProgress("Saving your details…");
 
       // 1. Create the PSW record
-      const { data: psw, error: pswErr } = await db.from("psws").insert({
+      const pswId = crypto.randomUUID();
+      const { error: pswErr } = await db.from("psws").insert({
+        id: pswId,
         full_name: fullName,
         email,
         phone,
@@ -243,7 +318,7 @@
         availability: { text: availability },
         status: "applied",
         contractor_confirmed: true
-      }).select("id").single();
+      });
       if (pswErr) throw pswErr;
 
       // 2. Upload each document to private storage + save metadata
@@ -251,7 +326,7 @@
         setProgress("Uploading " + dt.label + "…");
         const file = document.getElementById("doc_" + dt.key).files[0];
         const ext = file.name.split(".").pop().toLowerCase();
-        const path = `${psw.id}/${dt.key}_${Date.now()}.${ext}`;
+        const path = `${pswId}/${dt.key}_${Date.now()}.${ext}`;
 
         const { error: upErr } = await db.storage.from("psw-documents").upload(path, file, {
           contentType: file.type,
@@ -261,7 +336,7 @@
 
         const expiryInput = document.getElementById("exp_" + dt.key);
         const { error: docErr } = await db.from("documents").insert({
-          psw_id: psw.id,
+          psw_id: pswId,
           doc_type: dt.key,
           file_path: path,
           expiry_date: expiryInput ? (expiryInput.value || null) : null,
@@ -279,6 +354,75 @@
       showError("Something went wrong submitting your application. Please try again. (" + err.message + ")");
     }
   });
+  /* ---------- Returning PSW: sign in + forgot password ---------- */
+  (function returningPsw() {
+    const panel = document.getElementById("signinPanel");
+    if (!panel) return;
+    const errBox = document.getElementById("signinError");
+    const signinForm = document.getElementById("signinForm");
+    const forgotForm = document.getElementById("forgotForm");
+    const resetNote = document.getElementById("resetSentNote");
+
+    const sErr = (msg) => { errBox.textContent = msg; errBox.classList.add("show"); };
+    const sClear = () => errBox.classList.remove("show");
+
+    document.getElementById("toggleSignin").addEventListener("click", () => {
+      panel.classList.toggle("hidden");
+      sClear();
+    });
+    document.getElementById("forgotLink").addEventListener("click", (e) => {
+      e.preventDefault(); sClear();
+      signinForm.classList.add("hidden");
+      forgotForm.classList.remove("hidden");
+    });
+    const backToSignin = (e) => {
+      e.preventDefault(); sClear();
+      forgotForm.classList.add("hidden");
+      resetNote.classList.add("hidden");
+      signinForm.classList.remove("hidden");
+    };
+    document.getElementById("backToSignin").addEventListener("click", backToSignin);
+    document.getElementById("backToSignin2").addEventListener("click", backToSignin);
+
+    signinForm.addEventListener("submit", async (e) => {
+      e.preventDefault(); sClear();
+      const btn = document.getElementById("signinBtn");
+      btn.disabled = true; btn.textContent = "Signing in…";
+      try {
+        const db = getSupabase();
+        const { error } = await db.auth.signInWithPassword({
+          email: document.getElementById("signinEmail").value.trim(),
+          password: document.getElementById("signinPassword").value
+        });
+        if (error) throw error;
+        window.location.href = "psw.html";
+      } catch (err) {
+        sErr(err.message || "Sign-in failed. Check your email and password.");
+      } finally {
+        btn.disabled = false; btn.textContent = "Sign in";
+      }
+    });
+
+    forgotForm.addEventListener("submit", async (e) => {
+      e.preventDefault(); sClear();
+      const btn = document.getElementById("forgotBtn");
+      btn.disabled = true; btn.textContent = "Sending…";
+      try {
+        const db = getSupabase();
+        const { error } = await db.auth.resetPasswordForEmail(
+          document.getElementById("forgotEmail").value.trim(),
+          { redirectTo: window.location.origin + "/psw.html" }
+        );
+        if (error) throw error;
+        forgotForm.classList.add("hidden");
+        resetNote.classList.remove("hidden");
+      } catch (err) {
+        sErr(err.message || "Could not send the reset link. Try again.");
+      } finally {
+        btn.disabled = false; btn.textContent = "Send reset link";
+      }
+    });
+  })();
 })();
 </script>
 </body>
