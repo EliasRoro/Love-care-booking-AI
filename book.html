@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Book Care — Love-Care-Support</title>
   <meta name="description" content="Request a verified PSW for in-home care.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">\n  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\n  <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
@@ -125,7 +128,7 @@
         <h4>Contact</h4>
         <ul>
           <li><a href="mailto:eliassaychelem@gmail.com">eliassaychelem@gmail.com</a></li>
-          <li><a href="tel:+14165550100">(226) 600-6986</a></li>
+          <li><a href="tel:+12266006986">(226) 600-6986</a></li>
         </ul>
       </div>
     </div>
@@ -175,6 +178,12 @@
   }
   // Populate city dropdown
   const citySel = document.getElementById("city");
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Select a city…";
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  citySel.appendChild(placeholder);
   CONFIG.SERVICE_AREAS.forEach(c => {
     const opt = document.createElement("option");
     opt.value = c; opt.textContent = c;
@@ -204,7 +213,7 @@
     const languages = document.getElementById("languages").value.split(",").map(s => s.trim()).filter(Boolean);
     const serviceTypes = [...document.querySelectorAll("#serviceTypes input:checked")].map(c => c.value);
 
-    if (!name || !phone || !email || !address || !preferredTimes) {
+    if (!name || !phone || !email || !address || !city || !preferredTimes) {
       showError("Please fill in all required fields.");
       return;
     }

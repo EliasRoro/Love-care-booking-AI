@@ -230,16 +230,20 @@ create policy "admin_all_clients" on public.clients
 
 -- ---- psws ----
 drop policy if exists "anon_insert_psws" on public.psws;
-create policy "anon_insert_psws" on public.psws
-  for insert to anon with check (true);
+drop policy if exists "applicants_insert_psws" on public.psws;
+create policy "applicants_insert_psws" on public.psws
+  for insert to anon, authenticated
+  with check (status = 'applied');
 drop policy if exists "admin_all_psws" on public.psws;
 create policy "admin_all_psws" on public.psws
   for all to authenticated using (public.is_admin()) with check (public.is_admin());
 
 -- ---- documents (metadata only; files are in storage with their own policies) ----
 drop policy if exists "anon_insert_documents" on public.documents;
-create policy "anon_insert_documents" on public.documents
-  for insert to anon with check (true);
+drop policy if exists "applicants_insert_documents" on public.documents;
+create policy "applicants_insert_documents" on public.documents
+  for insert to anon, authenticated
+  with check (true);
 drop policy if exists "admin_all_documents" on public.documents;
 create policy "admin_all_documents" on public.documents
   for all to authenticated using (public.is_admin()) with check (public.is_admin());
@@ -286,8 +290,9 @@ values ('psw-documents', 'psw-documents', false)
 on conflict (id) do nothing;
 
 drop policy if exists "anon_upload_psw_documents" on storage.objects;
-create policy "anon_upload_psw_documents" on storage.objects
-  for insert to anon
+drop policy if exists "applicants_upload_psw_documents" on storage.objects;
+create policy "applicants_upload_psw_documents" on storage.objects
+  for insert to anon, authenticated
   with check (bucket_id = 'psw-documents');
 
 drop policy if exists "admin_read_psw_documents" on storage.objects;

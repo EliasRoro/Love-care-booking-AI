@@ -886,6 +886,14 @@ tr:hover td { background: #fbf8ef; }
 .loading { text-align: center; padding: 40px; color: var(--muted); }
 .hidden { display: none !important; }
 
+/* -- Small screens: let the header nav wrap instead of overflowing ------------ */
+@media (max-width: 719px) {
+  .nav { flex-wrap: wrap; height: auto; padding: 12px 0; row-gap: 6px; }
+  .nav-links { flex-wrap: wrap; row-gap: 4px; }
+  .nav-links a { padding: 8px 10px; font-size: 0.85rem; }
+  .nav-links a.btn { margin-left: 0; }
+}
+
 /* -- Larger screens -------------------------------------------------------------- */
 @media (min-width: 720px) {
   section { padding: 96px 0; }

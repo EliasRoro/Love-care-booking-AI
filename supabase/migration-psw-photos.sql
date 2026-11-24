@@ -63,6 +63,8 @@ $$;
 grant execute on function public.set_my_psw_photo(text) to authenticated;
 
 -- 4) Include the photo in the client-facing lookups
+-- (DROP first: CREATE OR REPLACE cannot change a function's return type.)
+drop function if exists public.booking_lookup(text);
 create or replace function public.booking_lookup(p_ref text)
 returns table (
   reference_code text,
@@ -92,6 +94,7 @@ as $$
   limit 1;
 $$;
 
+drop function if exists public.my_bookings();
 create or replace function public.my_bookings()
 returns table (
   reference_code text,

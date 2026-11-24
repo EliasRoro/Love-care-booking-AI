@@ -325,10 +325,13 @@
 
     const upcoming = bookings.filter(b => ["requested", "accepted", "in_progress"].includes(b.status));
     const past = bookings.filter(b => !["requested", "accepted", "in_progress"].includes(b.status));
+    const statusLabel = (b) => (b.status === "requested" && b.psw_name)
+      ? "Confirming PSW"
+      : (STATUS_LABEL[b.status] || b.status);
     const card = (b) => `<div class="card mb" style="padding:18px;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
         <strong>${esc(b.reference_code)}</strong>
-        <span class="badge ${esc(b.status)}">${esc(STATUS_LABEL[b.status] || b.status)}</span>
+        <span class="badge ${esc(b.status)}">${esc(statusLabel(b))}</span>
       </div>
       <div class="mt">
         <div><strong>When:</strong> ${esc(fmtWhen(b.scheduled_at))}${b.duration_hours ? " · " + esc(String(b.duration_hours)) + " hrs" : ""}</div>

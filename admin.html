@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin — Love-Care-Support</title>
   <meta name="robots" content="noindex, nofollow">
-  <link rel="preconnect" href="https://fonts.googleapis.com">\n  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\n  <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
@@ -360,7 +363,8 @@
         const bid = btn.dataset.bid;
         const { data: booking } = await db.from("bookings").select("*").eq("id", bid).single();
         if (btn.dataset.bact === "status") {
-          const next = prompt(`Set status for ${booking.reference_code}:\n${CONFIG.BOOKING_STATUSES.join(", ")}`, booking.status);
+          const next = prompt(`Set status for ${booking.reference_code}:
+${CONFIG.BOOKING_STATUSES.join(", ")}`, booking.status);
           if (!next || !CONFIG.BOOKING_STATUSES.includes(next)) return;
           const { error } = await db.from("bookings").update({ status: next }).eq("id", bid);
           if (error) alert("Failed: " + error.message);
@@ -439,14 +443,14 @@
         </div>
         <div class="small muted">${esc(psw.city)} · ${psw.experience_years} yrs · ★ ${Number(psw.rating_avg || 0).toFixed(1)}</div>
         <details class="small mt"><summary>Why this match?</summary><div class="match-reasons">${reasons.map(esc).join("<br>")}</div></details>
-        <button class="btn small mt" data-assign="${psw.id}">Assign this PSW</button>`;
+        <button class="btn small mt" data-assign="${psw.id}">Offer job to this PSW</button>`;
       list.appendChild(div);
     });
     list.querySelectorAll("button[data-assign]").forEach(btn => {
       btn.addEventListener("click", async () => {
         const { error } = await db.from("bookings").update({
           psw_id: btn.dataset.assign,
-          status: currentBooking.status === "requested" ? "accepted" : currentBooking.status
+          status: "requested" // PSW must accept or decline; never auto-accepted
         }).eq("id", currentBooking.id);
         if (error) alert("Assign failed: " + error.message);
         else { $("assignModal").classList.add("hidden"); loadAll(); }

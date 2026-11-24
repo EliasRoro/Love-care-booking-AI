@@ -135,7 +135,11 @@
         errBox.classList.add("show");
         return;
       }
-      const [title, sub] = STATUS_INFO[b.status] || [b.status, ""];
+      let [title, sub] = STATUS_INFO[b.status] || [b.status, ""];
+      if (b.status === "requested" && b.psw_name) {
+        title = "Confirming your PSW";
+        sub = `We've offered your booking to ${b.psw_name} — they're confirming availability now.`;
+      }
       result.innerHTML = `<div class="card" style="padding:18px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
           <strong>${esc(b.reference_code)}</strong>
